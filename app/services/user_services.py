@@ -17,3 +17,4 @@ def get_all_users(db: Session):
 
 def get_user_by_phone_id(phone_id: str, db: Session):
     return db.query(USERS).filter(USERS.phone_id == phone_id).first()
+
