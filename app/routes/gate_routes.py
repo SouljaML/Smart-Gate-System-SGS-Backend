@@ -18,8 +18,9 @@ class OTPRequest(BaseModel):
 def generate_otp_route(
         phone_id: str,
         db: Session = Depends(get_db),
-        _: str = Depends(verify_api_key)
+        api_key: str = Depends(verify_api_key)
 ):
+    print(api_key)
 
     # Check if phone_id exists in the system
     user = db.query(USERS).filter(USERS.phone_id == phone_id).first()
