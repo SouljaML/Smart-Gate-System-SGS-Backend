@@ -11,3 +11,5 @@ class USERS(Base):
     last_name = Column(String, nullable=False)
     phone_id = Column(String, unique=True, nullable=False)
     car_reg = Column(String, nullable=True)
+
+

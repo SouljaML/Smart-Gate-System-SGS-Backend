@@ -14,4 +14,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8080
 
 # Start the application
-CMD ["python", "main.py"]  # Change "main.py" to your actual entry file
+CMD ["python", "main.py"]
+# Change "main.py" to your actual entry file
