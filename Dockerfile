@@ -1,18 +1,17 @@
-# Use Python as the base image (Change if using another language)
+# Use official Python image
 FROM python:3.9
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the entire project into the container
+# Copy project files into the container
 COPY . .
 
-# Install required Python packages (if applicable)
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port your app runs on
+# Expose the Cloud Run port
 EXPOSE 8080
 
-# Start the application
-CMD ["python", "main.py"]
-# Change "main.py" to your actual entry file
+# Start the FastAPI app with Uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 
 from app.db.database import init_db
-from app.routes.gate_routes import router as gate_router
+import os
+import uvicorn
+from fastapi import FastAPI
 from app.routes.user_routes import router as user_router
-
+from app.routes.gate_routes import router as gate_router  # Ensure this is imported
+from app.db.database import init_db  # Ensure this is imported
 
 app = FastAPI(title="Smart Gate System API", version="1.0.0")
 
@@ -20,3 +23,9 @@ def root():
 @app.on_event("startup")
 def startup_event():
     init_db()
+
+
+# Ensure FastAPI runs on PORT 8080 when deployed
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))  # Use Cloud Run's PORT env variable
+    uvicorn.run(app, host="0.0.0.0", port=port)
