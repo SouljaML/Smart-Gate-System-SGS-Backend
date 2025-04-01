@@ -1,6 +1,9 @@
 # Use official Python image
 FROM python:3.9
 
+# Copy .env file into the container
+COPY app/.env /app/.env
+
 # Set the working directory
 WORKDIR /app
 
