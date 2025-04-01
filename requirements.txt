@@ -2,3 +2,4 @@ SQLAlchemy==2.0.37
 fastapi~=0.103.2
 pydantic~=2.5.3
 python-dotenv~=0.21.1
+uvicorn==0.15.0
