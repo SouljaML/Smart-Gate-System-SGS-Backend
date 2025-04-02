@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, WebSocket
 import requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -7,8 +7,12 @@ from app.services.otp_service import generate_otp, validate_otp
 from app.services.user_services import USERS
 from app.Security.security import verify_api_key
 from app.services.user_services import get_user_by_phone_id
+from typing import List
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
+
+# List to store connected devices Websocket clients (Raspberry Pi Devices)
+connected_clients: List[WebSocket] = []
 
 
 # Define a request model for OTP validation
@@ -69,3 +73,26 @@ async def open_gate(phone_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Gate control failed")
 
 
+@router.websocket("ws/gate")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket connection for raspberry pi to receive commands to open the gate"""
+    await WebSocket.accept()
+    connected_clients.append(websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()  # Keep connection alive
+    except:
+        connected_clients.remove(websocket)
+
+
+@router.post("/open")
+async def open_date():
+    """Send a gate open request to all connected devices raspberry pi clients"""
+    for client in connected_clients:
+        try:
+            await client.send_text("open_gate")  # Send command to open gate
+        except:
+            connected_clients.remove(client)  # Remove connected clients
+
+    return {"success": True, "message": "Gate open command sent"}
