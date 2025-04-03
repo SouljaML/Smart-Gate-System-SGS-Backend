@@ -8,6 +8,7 @@ from app.services.user_services import USERS
 from app.Security.security import verify_api_key
 from app.services.user_services import get_user_by_phone_id
 from typing import List
+from app.schema.gate_schema import DeviceRegistrationRequest, DeviceRegistrationResponse
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
 
@@ -98,3 +99,9 @@ async def open_date():
     return {"success": True, "message": "Gate open command sent"}
 
 
+@router.post("/device_registration", response_model=DeviceRegistrationResponse)
+def create_new_device(device: DeviceRegistrationRequest, db: Session = Depends(get_db)):
+    existing_device = get_user_by_phone_id(device.device_id, db)
+    if existing_device:
+        raise HTTPException(status_code=400, detail="Device already registered, please try another device")
+    return create_new_device(device, db)

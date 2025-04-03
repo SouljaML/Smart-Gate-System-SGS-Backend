@@ -9,13 +9,13 @@ from sqlalchemy import Boolean
 class DeviceRegistrationRequest(BaseModel):
     id: str
     device_id: str
-    always_open: bool
+    always_open: bool = False
     last_seen: Optional[datetime] = None
 
 class DeviceRegistrationResponse(BaseModel):
     id: str
     device_id: str
-    always_open: bool
+    always_open: bool = False
     last_seen: Optional[datetime] = None
 
     class Config:
