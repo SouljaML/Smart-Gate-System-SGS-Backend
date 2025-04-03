@@ -96,3 +96,5 @@ async def open_date():
             connected_clients.remove(client)  # Remove connected clients
 
     return {"success": True, "message": "Gate open command sent"}
+
+

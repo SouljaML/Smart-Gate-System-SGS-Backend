@@ -8,6 +8,8 @@ class UserCreate(BaseModel):
     last_name: str
     phone_id: str
     car_reg: Optional[str] = None
+    email: Optional[str] = None
+    device_id: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -16,9 +18,11 @@ class UserResponse(BaseModel):
     last_name: str
     phone_id: str
     car_reg: Optional[str] = None
+    email: Optional[str] = None
+    device_id: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
