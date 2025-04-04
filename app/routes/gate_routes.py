@@ -3,12 +3,15 @@ import requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.database import get_db
+from app.models.gate_model import DeviceInformation
 from app.services.otp_service import generate_otp, validate_otp
 from app.services.user_services import USERS
 from app.Security.security import verify_api_key
 from app.services.user_services import get_user_by_phone_id
+from app.services.gate_device_services import get_device_by_user_id, get_device_by_id, createDevice, get_all_devices
 from typing import List
 from app.schema.gate_schema import DeviceRegistrationRequest, DeviceRegistrationResponse
+from app.schema.users_schema import UserCreate
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
 
@@ -88,20 +91,73 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.post("/open")
-async def open_date():
-    """Send a gate open request to all connected devices raspberry pi clients"""
+async def open_gate(user: UserCreate, db: Session = Depends(get_db)):
+    """Send a gate open request to all connected Raspberry Pi clients after validation"""
+    # Check if the user has a registered device
+    device = get_device_by_user_id(user.device_id, db)
+    if not device:
+        raise HTTPException(status_code=403, detail="No registered device linked to this phone")
+
+    # Send the open command only if the user has a linked device
     for client in connected_clients:
         try:
             await client.send_text("open_gate")  # Send command to open gate
         except:
-            connected_clients.remove(client)  # Remove connected clients
+            connected_clients.remove(client)  # Remove disconnected clients
 
     return {"success": True, "message": "Gate open command sent"}
 
 
-@router.post("/device_registration", response_model=DeviceRegistrationResponse)
-def create_new_device(device: DeviceRegistrationRequest, db: Session = Depends(get_db)):
-    existing_device = get_user_by_phone_id(device.device_id, db)
+@router.post("/gate/device_registration", response_model=DeviceRegistrationResponse)
+async def register_device(device: DeviceRegistrationRequest, db: Session = Depends(get_db)):
+    # Check if the device is already registered
+    existing_device = get_device_by_id(device.device_id, db)
+
     if existing_device:
-        raise HTTPException(status_code=400, detail="Device already registered, please try another device")
-    return create_new_device(device, db)
+        # Return a response with a message and a device flag
+        return DeviceRegistrationResponse(
+            id=existing_device.id,
+            device_id=existing_device.device_id,
+            message="Device already registered",
+            device=True  # Indicate that this device exists
+        )
+
+    # Else, register the new device
+    new_device = createDevice(device, db)
+
+    if isinstance(new_device, dict) and "error" in new_device:
+        # Handle error case
+        raise HTTPException(status_code=400, detail=new_device["error"])
+
+    return new_device
+
+
+@router.get("/{device_id}", response_model=DeviceRegistrationResponse)
+def get_device(device_id: str, db: Session = Depends(get_db)):
+    device = get_device_by_id(device_id, db)
+
+    if not device:
+        raise HTTPException(status_code=400, detail="Device ID does not exist")
+
+    return device
+
+
+@router.get("/device/{user_id}", response_model=DeviceRegistrationResponse)
+def device_by_user_id(user_id: str, db: Session = Depends(get_db)):
+    device = get_device_by_user_id(user_id, db)
+
+    if not device:
+        raise HTTPException(status_code=400, detail="device not found")
+
+    return device
+
+
+@router.get("/", response_model=List[DeviceRegistrationResponse])
+def all_devices(db: Session = Depends(get_db)):
+    devices = get_all_devices(db)
+
+    if not devices:
+        print("No devices found in the database.")
+        raise HTTPException(status_code=404, detail="No devices found")
+
+    return devices

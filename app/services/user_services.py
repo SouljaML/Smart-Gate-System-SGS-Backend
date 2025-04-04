@@ -1,7 +1,9 @@
+from typing import List
+
 from sqlalchemy.orm import Session
 from app.models.users_model import USERS
 from app.schema.users_schema import UserCreate
-from app.schema.gate_schema import DeviceRegistrationRequest
+# from app.schema.gate_schema import DeviceRegistrationRequest
 
 
 def create_user(user: UserCreate, db: Session):
@@ -20,4 +22,6 @@ def get_user_by_phone_id(phone_id: str, db: Session):
     return db.query(USERS).filter(USERS.phone_id == phone_id).first()
 
 
+def get_users_by_device_id(device_id: str, db: Session) -> List[USERS]:
+    return db.query(USERS).filter(USERS.device_id == device_id).all()
 
