@@ -9,9 +9,8 @@ from app.Security.security import verify_api_key
 from app.services.user_services import get_user_by_phone_id
 from app.services.gate_device_services import get_device_by_user_id, get_device_by_id, createDevice, get_all_devices
 from typing import List
-from app.schema.gate_schema import DeviceRegistrationRequest, DeviceRegistrationResponse
+from app.schema.gate_schema import DeviceRegistrationRequest, DeviceRegistrationResponse, GateModeRequest
 from app.schema.users_schema import UserCreate
-
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
 
@@ -165,3 +164,54 @@ def all_devices(db: Session = Depends(get_db),
         raise HTTPException(status_code=404, detail="No devices found")
 
     return devices
+
+
+@router.post("/mode")
+def set_gate_mode(mode: GateModeRequest, db: Session = Depends(get_db),
+                  _: str = Depends(verify_api_key)):
+    device = get_device_by_id(mode.device_id, db)
+
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+
+    device.always_open = mode.always_open
+    db.commit()
+    return {"message": "Gate mode updated successfully",
+            "device_id": device.device_id, "always_open": device.always_open}
+
+
+@router.get("/mode/{device_id}")
+def get_gate_mode(device_id: str, db: Session = Depends(get_db),
+                  _: str = Depends(verify_api_key)):
+    device = get_device_by_id(device_id, db)
+
+    if not device:
+        raise HTTPException(status_code=404, detail="Device Not found")
+
+    return {"message": device.device_id, "always_open": device.always_open}
+
+
+@router.post("/close/{device_id}")
+def close_gate(device_id: str, db: Session = Depends(get_db),
+               _: str = Depends(verify_api_key)):
+    device = get_device_by_id(device_id, db)
+
+    if not device:
+        raise HTTPException(status_code=404, detail="Device Not found")
+
+    if not device.always_open:
+        raise HTTPException(status_code=400, detail="Gate is in normal mode, auto close is active")
+
+    # Perform get closing logic on this section, not yet implemented, we will a send to ESP32 to close
+    device.always_open = False
+    db.commit()
+
+    return {"message": "Gate closing triggered", "device_id": device.device_id}
+
+
+def auto_close_gate(device_id: str, db: Session):
+    device = get_device_by_id(device_id, db)
+
+    if device and not device.always_open:
+        #  Perform auto-close operation here
+        print(f"auto-closing gate for device {device.device_id}...")

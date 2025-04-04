@@ -25,3 +25,8 @@ class DeviceRegistrationResponse(BaseModel):
 
     class Config:
         from_attributes = True  # ✅ correct for Pydantic v2
+
+
+class GateModeRequest(BaseModel):
+    device_id: str
+    always_open: bool
