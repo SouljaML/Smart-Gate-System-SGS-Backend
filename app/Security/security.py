@@ -43,16 +43,16 @@ def verify_api_key(api_key: str = Security(api_key_header)):
         )
 
     # Trim spaces and check the key
-    api_key_cleaned = api_key.strip()
-    key_cleaned = key.strip()
+    # api_key_cleaned = api_key.strip()
+    # key_cleaned = key.strip()
+    #
+    # print(f"Received API Key: {repr(api_key_cleaned)}")  # Use repr() to reveal hidden characters
+    # print(f"Expected API Key: {repr(key_cleaned)}")
+    #
+    # if api_key != key_cleaned:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Invalid API Key"
+    #     )
 
-    print(f"Received API Key: {repr(api_key_cleaned)}")  # Use repr() to reveal hidden characters
-    print(f"Expected API Key: {repr(key_cleaned)}")
-
-    if api_key_cleaned != key_cleaned:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid API Key"
-        )
-
-    return api_key_cleaned
+    return api_key

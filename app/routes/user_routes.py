@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
+from app.Security.security import verify_api_key
 from app.services.user_services import create_user, get_all_users, get_user_by_phone_id, get_users_by_device_id
 from app.services.gate_device_services import is_device_registered
 from app.schema.users_schema import UserCreate, UserResponse
@@ -18,7 +19,8 @@ router = APIRouter()
 #         raise HTTPException(status_code=400, detail="Phone ID already exists")
 #     return create_user(user, db)
 @router.post("/", response_model=UserResponse)
-def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
+def create_new_user(user: UserCreate, db: Session = Depends(get_db),
+                    _: str = Depends(verify_api_key)):
     # Ensure the device_id is registered before allowing user creation
     if not is_device_registered(user.device_id, db):
         raise HTTPException(status_code=400, detail="Device not recognized. Please verify first.")
@@ -30,12 +32,14 @@ def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[UserResponse])
-def list_users(db: Session = Depends(get_db)):
+def list_users(db: Session = Depends(get_db),
+               _: str = Depends(verify_api_key)):
     return get_all_users(db)
 
 
 @router.get("/{phone_id}", response_model=UserResponse)
-def get_user(phone_id: str, db: Session = Depends(get_db)):
+def get_user(phone_id: str, db: Session = Depends(get_db),
+             _: str = Depends(verify_api_key)):
     user = get_user_by_phone_id(phone_id, db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

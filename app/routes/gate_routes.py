@@ -3,7 +3,6 @@ import requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.models.gate_model import DeviceInformation
 from app.services.otp_service import generate_otp, validate_otp
 from app.services.user_services import USERS
 from app.Security.security import verify_api_key
@@ -12,6 +11,7 @@ from app.services.gate_device_services import get_device_by_user_id, get_device_
 from typing import List
 from app.schema.gate_schema import DeviceRegistrationRequest, DeviceRegistrationResponse
 from app.schema.users_schema import UserCreate
+
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
 
@@ -108,8 +108,9 @@ async def open_gate(user: UserCreate, db: Session = Depends(get_db)):
     return {"success": True, "message": "Gate open command sent"}
 
 
-@router.post("/gate/device_registration", response_model=DeviceRegistrationResponse)
-async def register_device(device: DeviceRegistrationRequest, db: Session = Depends(get_db)):
+@router.post("/device_registration", response_model=DeviceRegistrationResponse)
+async def register_device(device: DeviceRegistrationRequest, db: Session = Depends(get_db),
+                          _: str = Depends(verify_api_key)):
     # Check if the device is already registered
     existing_device = get_device_by_id(device.device_id, db)
 
@@ -133,7 +134,8 @@ async def register_device(device: DeviceRegistrationRequest, db: Session = Depen
 
 
 @router.get("/{device_id}", response_model=DeviceRegistrationResponse)
-def get_device(device_id: str, db: Session = Depends(get_db)):
+def get_device(device_id: str, db: Session = Depends(get_db),
+               _: str = Depends(verify_api_key)):
     device = get_device_by_id(device_id, db)
 
     if not device:
@@ -143,7 +145,8 @@ def get_device(device_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/device/{user_id}", response_model=DeviceRegistrationResponse)
-def device_by_user_id(user_id: str, db: Session = Depends(get_db)):
+def device_by_user_id(user_id: str, db: Session = Depends(get_db),
+                      _: str = Depends(verify_api_key)):
     device = get_device_by_user_id(user_id, db)
 
     if not device:
@@ -153,7 +156,8 @@ def device_by_user_id(user_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=List[DeviceRegistrationResponse])
-def all_devices(db: Session = Depends(get_db)):
+def all_devices(db: Session = Depends(get_db),
+                _: str = Depends(verify_api_key)):
     devices = get_all_devices(db)
 
     if not devices:
