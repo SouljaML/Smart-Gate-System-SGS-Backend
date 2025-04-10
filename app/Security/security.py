@@ -10,30 +10,16 @@ print(f".env Loaded: {dotenv_loaded}")  # Should print True if loaded
 
 
 key = os.getenv("API_KEY")
-print(f"Loaded API_KEY: {key}")  # Check if API_KEY is actually loaded
+# print(f"Loaded API_KEY: {key}")  # Check if API_KEY is actually loaded
 
 
 # Load environment variables
 load_dotenv()
 key = os.getenv("API_KEY", "").strip()
-print(key)
+# print(key)
 
 api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 
-
-# def verify_api_key(api_key: str = Security(api_key_header)):
-#     """
-#     Checks if the provided API key is valid
-#     :param api_key:
-#     :return:
-#     """
-#
-#     if api_key.strip().lower() != key.lower():
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Invalid API Key"
-#         )
-#     return api_key
 
 def verify_api_key(api_key: str = Security(api_key_header)):
     if not api_key:

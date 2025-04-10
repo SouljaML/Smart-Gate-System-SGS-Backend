@@ -34,11 +34,24 @@ def get_all_devices(db: Session):
     return db.query(DeviceInformation).all()
 
 
-def get_device_by_user_id(user_id: str, db: Session):
-    device_by_user_id = db.query(DeviceInformation.join).filter(USERS.id == user_id).first()
-    return device_by_user_id
+def get_device_by_phone_id(phone_id: str, db: Session):
+    device = (
+        db.query(DeviceInformation)
+            .join(USERS, USERS.device_id == DeviceInformation.device_id)  # Join condition
+            .filter(USERS.phone_id == phone_id)  # Filter by phone_id
+            .first()
+    )
+    return device
 
 
 def is_device_registered(device_id: str, db: Session):
     # Query the DeviceInformation model (not the Pydantic schema)
     return db.query(DeviceInformation).filter(DeviceInformation.device_id == device_id).first()
+
+
+def get_device_by_user_id(user_id: str, db: Session):
+    device = (db.query(USERS)
+              .join(DeviceInformation, DeviceInformation.device_id == USERS.device_id)
+              .filter(USERS.id == user_id)
+              .first()
+              )

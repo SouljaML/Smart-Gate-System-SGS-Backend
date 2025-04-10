@@ -17,3 +17,12 @@ class DeviceInformation(Base):
     device = Column(Boolean, nullable=True)
 
     users = relationship("USERS", back_populates="device")
+
+    def __repr__(self):
+        return f"<DeviceInformation(id={self.id}, device_id={self.device_id}, always_open={self.always_open})>"
+
+    def __str__(self):
+        return f"DeviceInformation(device_id={self.device_id})"
+
+    def __repr__(self):
+        return self.__str__()
