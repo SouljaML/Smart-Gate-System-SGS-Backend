@@ -17,13 +17,15 @@ from app.services.user_services import get_user_by_phone_id
 from app.services.gate_device_services import get_device_by_phone_id, \
     get_device_by_id, \
     createDevice, \
-    get_all_devices
+    get_all_devices, \
+    update_gate_status
 from typing import List, Dict
 from app.schema.gate_schema import DeviceRegistrationRequest, \
     DeviceRegistrationResponse, \
-    GateModeRequest
-from app.models.gate_model import gateCommandRequest, \
-    gateCommand
+    GateModeRequest, \
+    deviceStatusUpdateRequest, \
+    gateCommandRequest
+# from app.models.gate_model import gateCommand
 from fastapi.logger import logger
 
 router = APIRouter(prefix="/gate", tags=["Gate"])
@@ -135,9 +137,18 @@ async def gate_command_instruction(request: gateCommandRequest,
 
     print(f"[DEBUG] Sending {request.command} to device: {device.device_id}")
 
+    current_status = device.status or "unknown"
+    command = request.command.lower()
+
+    # Prevent sending unnceessary commands
+    if command == "open-gate" and current_status == "open":
+        return {"message": "Gate is already open"}
+    elif command == "close-gate" and current_status == "closed":
+        return {"message": "Gate is already closed"}
+
     # Send the open command only if the user has a linked device
-    command = {"command": request.command}
-    success = await send_command_to_client(device.device_id, command)
+    command_payload = {"command": request.command}
+    success = await send_command_to_client(device.device_id, command_payload)
 
     if success:
         logger.info(f"Command {request.command} has been successfuly delivered to the gate")
@@ -234,22 +245,22 @@ def get_gate_mode(device_id: str, db: Session = Depends(get_db),
     return {"message": device.device_id, "always_open": device.always_open}
 
 
-@router.post("/close/{device_id}")
-def close_gate(device_id: str, db: Session = Depends(get_db),
-               _: str = Depends(verify_api_key)):
-    device = get_device_by_id(device_id, db)
-
-    if not device:
-        raise HTTPException(status_code=404, detail="Device Not found")
-
-    if not device.always_open:
-        raise HTTPException(status_code=400, detail="Gate is in normal mode, auto close is active")
-
-    # Perform get closing logic on this section, not yet implemented, we will a send to ESP32 to close
-    device.always_open = False
-    db.commit()
-
-    return {"message": "Gate closing triggered", "device_id": device.device_id}
+# @router.post("/close/{device_id}")
+# def close_gate(device_id: str, db: Session = Depends(get_db),
+#                _: str = Depends(verify_api_key)):
+#     device = get_device_by_id(device_id, db)
+#
+#     if not device:
+#         raise HTTPException(status_code=404, detail="Device Not found")
+#
+#     if not device.always_open:
+#         raise HTTPException(status_code=400, detail="Gate is in normal mode, auto close is active")
+#
+#     # Perform get closing logic on this section, not yet implemented, we will a send to ESP32 to close
+#     device.always_open = False
+#     db.commit()
+#
+#     return {"message": "Gate closing triggered", "device_id": device.device_id}
 
 
 def auto_close_gate(device_id: str, db: Session):
@@ -258,3 +269,20 @@ def auto_close_gate(device_id: str, db: Session):
     if device and not device.always_open:
         #  Perform auto-close operation here
         print(f"auto-closing gate for device {device.device_id}...")
+
+
+@router.post("/update_status")
+async def update_device_status(status_update: deviceStatusUpdateRequest,
+                               db: Session = Depends(get_db)):
+    device = get_device_by_id(status_update.device_id, db)
+
+    if not device:
+        logger.warning(f"This device was not found {device}")
+        raise HTTPException(status_code=404,
+                            detail="Device not found")
+
+    # update the device status on DB
+    update_gate_status(device.device_id, status_update.status, db)
+    logger.info(f"Device {device.device_id} updated the status to; {status_update.status}")
+
+    return {"message": f"Status updated to {status_update.status}"}

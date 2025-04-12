@@ -2,9 +2,7 @@ import uuid
 from datetime import datetime
 
 from enum import Enum
-from typing import Optional
 
-from pydantic import BaseModel
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
 from app.db.database import Base
 from sqlalchemy.orm import relationship
@@ -16,6 +14,7 @@ class DeviceInformation(Base):
     id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))  # ✅ auto UUID
     device_id = Column(String, unique=True, nullable=False)
     always_open = Column(Boolean, default=False)
+    status = Column(String, default="closed")
     last_seen = Column(DateTime, default=datetime.utcnow)
     message = Column(String, nullable=True)
     device = Column(Boolean, nullable=True)
@@ -39,8 +38,4 @@ class gateCommand(str, Enum):
     always_open = "always-open"
 
 
-# --------------Pydantic model for the request----------------*
-class gateCommandRequest(BaseModel):
-    phone_id: str
-    command: Optional[str] = None
 

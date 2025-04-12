@@ -9,6 +9,7 @@ from pydantic import BaseModel
 class DeviceRegistrationRequest(BaseModel):
     device_id: str  # Note: The id field is not sent in the request, it's auto-generated
     always_open: bool = False
+    status: str
     last_seen: Optional[datetime] = None
     message: Optional[str] = None
     device: Optional[bool] = False
@@ -19,6 +20,7 @@ class DeviceRegistrationResponse(BaseModel):
     id: str
     device_id: str
     always_open: bool = False
+    status: str
     last_seen: Optional[datetime] = None
     message: Optional[str] = None
     device: Optional[bool] = False
@@ -30,3 +32,16 @@ class DeviceRegistrationResponse(BaseModel):
 class GateModeRequest(BaseModel):
     device_id: str
     always_open: bool
+
+
+# --------------Pydantic model for the request----------------*
+class gateCommandRequest(BaseModel):
+    phone_id: str
+    command: Optional[str] = None
+
+
+# --------------Update phone status----------------*
+class deviceStatusUpdateRequest(BaseModel):
+    device_id: str
+    status: str
+

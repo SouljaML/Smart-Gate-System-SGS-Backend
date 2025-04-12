@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 from sqlalchemy.testing.plugin.plugin_base import logging
 
@@ -59,4 +61,16 @@ def get_device_by_user_id(user_id: str, db: Session):
               .filter(USERS.id == user_id)
               .first()
               )
+    return device
 
+
+def update_gate_status(device_id: str, status: str, db: Session):
+    device = get_device_by_id(device_id, db)
+
+    if device:
+        device.status = status
+        device.last_seen = datetime.utcnow()
+        db.commit()
+        db.refresh(device)
+        return device
+    return None
