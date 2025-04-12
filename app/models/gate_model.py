@@ -1,6 +1,10 @@
 import uuid
 from datetime import datetime
 
+from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
 from app.db.database import Base
 from sqlalchemy.orm import relationship
@@ -26,3 +30,17 @@ class DeviceInformation(Base):
 
     def __repr__(self):
         return self.__str__()
+
+
+# --------------Enum valid for gate commands------------------*
+class gateCommand(str, Enum):
+    open_gate = "open-gate"
+    close_gate = "close-gate"
+    always_open = "always-open"
+
+
+# --------------Pydantic model for the request----------------*
+class gateCommandRequest(BaseModel):
+    phone_id: str
+    command: Optional[str] = None
+

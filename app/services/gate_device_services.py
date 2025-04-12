@@ -5,6 +5,8 @@ from app.schema.gate_schema import DeviceRegistrationRequest
 from app.models.users_model import USERS
 from app.models.gate_model import DeviceInformation
 
+from fastapi.logger import logger
+
 
 def createDevice(device: DeviceRegistrationRequest, db: Session):
     try:
@@ -14,14 +16,16 @@ def createDevice(device: DeviceRegistrationRequest, db: Session):
         db.refresh(db_device)  # Ensure data is refreshed from DB
 
         # Debugging logs
-        print(f"Created Device: {db_device}")
+        logger.info(f"Device created: ID={db_device.id}, DeviceID={db_device.device_id}")
 
         if not db_device.id or not db_device.device_id:
+            logger.warning(f"Device created but missing ID or device id.")
             raise ValueError("Invalid device data returned from DB")
 
         return db_device  # Return the DB model, which is correctly mapped to the response
     except Exception as e:
         db.rollback()
+        logger.error(f"Failed to create device: {e}")
         return {"error": "Invalid device data"}
 
 
@@ -55,3 +59,4 @@ def get_device_by_user_id(user_id: str, db: Session):
               .filter(USERS.id == user_id)
               .first()
               )
+

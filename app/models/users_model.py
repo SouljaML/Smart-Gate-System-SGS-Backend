@@ -18,4 +18,7 @@ class USERS(Base):
 
     device = relationship("DeviceInformation", back_populates="users")
 
+    def __str__(self):
+        return f"USERS(device_id={self.device_id})"
+
 
