@@ -15,7 +15,7 @@ class DeviceRegistrationRequest(BaseModel):
     device: Optional[bool] = False
 
 
-# Response Model (what you send back as the response)
+# --------------Response Model (what you send back as the response)----------------*
 class DeviceRegistrationResponse(BaseModel):
     id: str
     device_id: str
